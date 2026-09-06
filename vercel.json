@@ -8,9 +8,18 @@
   "outputDirectory": "dist-client",
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs20.x",
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/((?!assets/|uploads/|favicon|robots|api).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets/|uploads/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {

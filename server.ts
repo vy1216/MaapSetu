@@ -7,14 +7,13 @@ import QRCode from "qrcode";
 import nodemailer from "nodemailer";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Increase payload limit for photo/document uploads
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-// Ensure data directory exists
-const DATA_DIR = path.join(process.cwd(), "data");
+const TMP = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), "data");
+const DATA_DIR = process.env.DATA_DIR || TMP;
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const DB_FILE = path.join(DATA_DIR, "maapsetu_db.json");
 
