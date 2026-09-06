@@ -399,26 +399,41 @@ const activeOtps = new Map<string, OtpEntry>();
 
 // Configure mail transporter if SMTP settings are present
 function getMailTransporter() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
+  const host = (process.env.SMTP_HOST || "").trim();
+  const user = (process.env.SMTP_USER || "").trim();
+  const pass = (process.env.SMTP_PASS || "").trim();
+  const portStr = (process.env.SMTP_PORT || "").trim();
+  const port = portStr ? parseInt(portStr, 10) : 587;
 
   if (!host || !user || !pass) {
     return null;
   }
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
+  try {
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+  } catch (_e) {
+    console.warn("[SMTP] Failed to build transporter, falling back to dev mode");
+    return null;
+  }
 }
 
 async function sendVerificationEmail(recipient: string, otpCode: string): Promise<boolean> {
   const transporter = getMailTransporter();
-  const fromAddress = process.env.SMTP_FROM || `"MaapSetu Metrology" <no-reply@delhi.gov.in>`;
+  const smtpUser = (process.env.SMTP_USER || "").trim();
+  const rawFrom = (process.env.SMTP_FROM || "").trim();
+  let fromAddress: string;
+  if (rawFrom) {
+    fromAddress = rawFrom;
+  } else if (smtpUser) {
+    fromAddress = "MaapSetu Metrology <" + smtpUser + ">";
+  } else {
+    fromAddress = "MaapSetu Metrology <no-reply@delhi.gov.in>";
+  }
 
   const htmlContent = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; background: #FFFFFF;">
