@@ -1,0 +1,6 @@
+{
+  "name": "MaapSetu",
+  "description": "Online Verification System for Weighing and Measuring Instruments under Legal Metrology Act, 2009 (SIH 2026 PS 26036)",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
