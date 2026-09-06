@@ -1101,24 +1101,65 @@ app.get("/api/analytics", (req: Request, res: Response) => {
 // -------------------------------------------------------------
 // Vite Middleware for Development & Static File Serving for Prod
 // -------------------------------------------------------------
-async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
+function resolveClientDistDir(): string {
+  // Vercel build: "dist-client"   Local build: "dist"
+  const candidates = [
+    path.join(process.cwd(), "dist-client"),
+    path.join(process.cwd(), "dist"),
+    path.join(process.cwd(), "..", "dist-client"),
+  ];
+  for (const p of candidates) {
+    const idx = path.join(p, "index.html");
+    if (fs.existsSync(idx)) return p;
+  }
+  return candidates[0];
+}
+
+export async function mountStaticMiddleware() {
+  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req: Request, res: Response) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    const distPath = resolveClientDistDir();
+    if (fs.existsSync(path.join(distPath, "index.html"))) {
+      app.use(express.static(distPath));
+      app.get("*", (_req: Request, res: Response) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    }
   }
+}
 
+export async function startServer() {
+  await mountStaticMiddleware();
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`MaapSetu Fullstack Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
-startServer();
+// Export the Express app so serverless bundlers (Vercel /api handler) can
+// import it without starting a TCP listener.
+export default app;
+export { app };
+
+// Auto-start ONLY when this file is the entry point (direct `node server.cjs`,
+// `tsx server.ts`, etc.), NOT when it is require()d from another module.
+// This prevents Vercel's /api/index.js wrapper from accidentally calling listen().
+const isMain = (() => {
+  try {
+    // @ts-ignore - esbuild cjs shim sets require.main correctly
+    return require.main === module;
+  } catch {
+    return process.argv[1] && process.argv[1].endsWith(path.basename(__filename || "server.ts"));
+  }
+})();
+
+if (isMain && !process.env.VERCEL_SKIP_AUTO_START) {
+  startServer().catch((err) => {
+    console.error("Failed to start MaapSetu server:", err);
+    process.exit(1);
+  });
+}

@@ -15,10 +15,16 @@ node_modules/
 build/
 dist/
 out/
+dist-client/
+dist-server/
 coverage/
 .serverless/
 .next/
 .nuxt/
+
+# ---------- Vercel-generated API handler (created at build time by scripts/prepare-vercel-api.js)
+api/index.js
+.vercel/
 
 # ---------- Package Manager Locks ----------
 # We track package-lock.json for reproducible builds with npm.
