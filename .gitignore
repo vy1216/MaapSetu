@@ -22,8 +22,9 @@ coverage/
 .next/
 .nuxt/
 
-# ---------- Vercel-generated API handler (created at build time by scripts/prepare-vercel-api.js)
-api/index.js
+# ---------- Vercel & Build Artifacts ----------
+# NOTE: api/index.js IS tracked (it's the pre-built Vercel serverless entrypoint)
+# Only generated/built output is ignored.
 .vercel/
 
 # ---------- Package Manager Locks ----------
