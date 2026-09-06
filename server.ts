@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createServer as createViteServer } from "vite";
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
@@ -1164,10 +1165,26 @@ export { app };
 // This prevents Vercel's /api/index.js wrapper from accidentally calling listen().
 const isMain = (() => {
   try {
-    // @ts-ignore - esbuild cjs shim sets require.main correctly
-    return require.main === module;
+    if (typeof require !== "undefined" && typeof require.main !== "undefined") {
+      // @ts-ignore - CJS mode (esbuild bundle output)
+      return require.main === module;
+    }
   } catch {
-    return process.argv[1] && process.argv[1].endsWith(path.basename(__filename || "server.ts"));
+    // Fall through to ESM detection below
+  }
+  try {
+    const __filenameESM = typeof __filename !== "undefined"
+      ? __filename
+      : fileURLToPath(import.meta.url);
+    const entryArg = process.argv[1];
+    if (!entryArg) return false;
+    try {
+      return path.resolve(entryArg) === path.resolve(__filenameESM);
+    } catch {
+      return path.basename(entryArg) === path.basename(__filenameESM);
+    }
+  } catch {
+    return false;
   }
 })();
 
