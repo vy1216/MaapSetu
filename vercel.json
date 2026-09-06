@@ -9,14 +9,22 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/*.js": {
+    "api/**/*.js": {
       "memory": 1024,
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
-      "source": "/((?!assets/|uploads/).*)",
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "/uploads/$1"
+    },
+    {
+      "source": "/((?!assets/|uploads/|api/).*)",
       "destination": "/index.html"
     }
   ],
